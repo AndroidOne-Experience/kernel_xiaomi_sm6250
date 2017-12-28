@@ -258,6 +258,7 @@ int ovl_verify_origin(struct dentry *dentry, struct vfsmount *mnt,
 int ovl_verify_index(struct dentry *index, struct ovl_path *lower,
 		     unsigned int numlower);
 int ovl_get_index_name(struct dentry *origin, struct qstr *name);
+struct dentry *ovl_get_index_fh(struct ovl_fs *ofs, struct ovl_fh *fh);
 int ovl_path_next(int idx, struct dentry *dentry, struct path *path);
 struct dentry *ovl_lookup(struct inode *dir, struct dentry *dentry, unsigned int flags);
 bool ovl_lower_positive(struct dentry *dentry);
