@@ -1290,6 +1290,8 @@ static int ovl_fill_super(struct super_block *sb, void *data, int silent)
 	if (!root_dentry)
 		goto out_put_cred;
 
+	root_dentry->d_fsdata = oe;
+
 	mntput(upperpath.mnt);
 	for (i = 0; i < numlower; i++)
 		mntput(stack[i].mnt);
@@ -1297,12 +1299,10 @@ static int ovl_fill_super(struct super_block *sb, void *data, int silent)
 	path_put(&workpath);
 
 	if (upperpath.dentry) {
-		oe->has_upper = true;
+		ovl_dentry_set_upper_alias(root_dentry);
 		if (ovl_is_impuredir(upperpath.dentry))
 			ovl_set_flag(OVL_IMPURE, d_inode(root_dentry));
 	}
-
-	root_dentry->d_fsdata = oe;
 
 	/* Root is always merge -> can have whiteouts */
 	ovl_set_flag(OVL_WHITEOUTS, d_inode(root_dentry));
