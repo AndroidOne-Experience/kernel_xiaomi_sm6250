@@ -491,6 +491,7 @@ int __init ext4_init_sysfs(void)
 
 feat_err:
 	kobject_put(ext4_feat);
+	ext4_feat = NULL;
 kset_err:
 	kset_unregister(ext4_kset);
 	ext4_kset = NULL;
@@ -500,6 +501,7 @@ kset_err:
 void ext4_exit_sysfs(void)
 {
 	kobject_put(ext4_feat);
+	ext4_feat = NULL;
 	kset_unregister(ext4_kset);
 	ext4_kset = NULL;
 	remove_proc_entry(proc_dirname, NULL);
