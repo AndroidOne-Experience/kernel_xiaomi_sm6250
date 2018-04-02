@@ -378,6 +378,8 @@ extern void check_move_unevictable_pages(struct page **, int nr_pages);
 
 extern int kswapd_run(int nid);
 extern void kswapd_stop(int nid);
+extern void update_kswapd_threads(void);
+extern int kswapd_threads;
 
 #ifdef CONFIG_SWAP
 
