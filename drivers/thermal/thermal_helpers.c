@@ -192,7 +192,8 @@ void thermal_cdev_update(struct thermal_cooling_device *cdev)
 		}
 	}
 	trace_cdev_update_start(cdev);
-	cdev->ops->set_cur_state(cdev, current_target);
+	if (!cdev->ops->set_cur_state(cdev, current_target))
+		thermal_cooling_device_stats_update(cdev, current_target);
 	if (cdev->ops->set_min_state)
 		cdev->ops->set_min_state(cdev, min_target);
 	cdev->updated = true;

@@ -77,6 +77,7 @@ int thermal_build_list_of_policies(char *buf);
 int thermal_zone_create_device_groups(struct thermal_zone_device *, int);
 void thermal_zone_destroy_device_groups(struct thermal_zone_device *);
 void thermal_cooling_device_setup_sysfs(struct thermal_cooling_device *);
+void thermal_cooling_device_destroy_sysfs(struct thermal_cooling_device *cdev);
 /* used only at binding time */
 ssize_t
 thermal_cooling_device_trip_point_show(struct device *,
@@ -103,6 +104,15 @@ ssize_t
 thermal_cooling_device_upper_limit_store(struct device *dev,
 				    struct device_attribute *attr,
 				    const char *buf, size_t count);
+
+#ifdef CONFIG_THERMAL_STATISTICS
+void thermal_cooling_device_stats_update(struct thermal_cooling_device *cdev,
+					 unsigned long new_state);
+#else
+static inline void
+thermal_cooling_device_stats_update(struct thermal_cooling_device *cdev,
+				    unsigned long new_state) {}
+#endif /* CONFIG_THERMAL_STATISTICS */
 
 #ifdef CONFIG_THERMAL_GOV_STEP_WISE
 int thermal_gov_step_wise_register(void);
