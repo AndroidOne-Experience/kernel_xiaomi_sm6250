@@ -741,6 +741,7 @@ struct inode *ovl_get_inode(struct dentry *dentry, struct dentry *upperdentry,
 	bool bylower = ovl_hash_bylower(sb, upperdentry, lowerdentry, index);
 	bool is_dir;
 	unsigned long ino = 0;
+	int err = -ENOMEM;
 
 	if (!realinode)
 		realinode = d_inode(lowerdentry);
@@ -758,7 +759,7 @@ struct inode *ovl_get_inode(struct dentry *dentry, struct dentry *upperdentry,
 		inode = iget5_locked(sb, (unsigned long) key,
 				     ovl_inode_test, ovl_inode_set, key);
 		if (!inode)
-			goto out_nomem;
+			goto out_err;
 		if (!(inode->i_state & I_NEW)) {
 			/*
 			 * Verify that the underlying files stored in the inode
@@ -766,8 +767,8 @@ struct inode *ovl_get_inode(struct dentry *dentry, struct dentry *upperdentry,
 			 */
 			if (!ovl_verify_inode(inode, lowerdentry, upperdentry)) {
 				iput(inode);
-				inode = ERR_PTR(-ESTALE);
-				goto out;
+				err = -ESTALE;
+				goto out_err;
 			}
 
 			dput(upperdentry);
@@ -782,8 +783,10 @@ struct inode *ovl_get_inode(struct dentry *dentry, struct dentry *upperdentry,
 	} else {
 		/* Lower hardlink that will be broken on copy up */
 		inode = new_inode(sb);
-		if (!inode)
-			goto out_nomem;
+		if (!inode) {
+			err = -ENOMEM;
+			goto out_err;
+		}
 	}
 	ovl_fill_inode(inode, realinode->i_mode, realinode->i_rdev, ino);
 	ovl_inode_init(inode, upperdentry, lowerdentry);
@@ -806,7 +809,7 @@ struct inode *ovl_get_inode(struct dentry *dentry, struct dentry *upperdentry,
 out:
 	return inode;
 
-out_nomem:
-	inode = ERR_PTR(-ENOMEM);
+out_err:
+	inode = ERR_PTR(err);
 	goto out;
 }
