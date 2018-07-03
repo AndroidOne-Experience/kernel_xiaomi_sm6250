@@ -795,6 +795,7 @@ enum tc_setup_type {
 	TC_SETUP_CLSFLOWER,
 	TC_SETUP_CLSMATCHALL,
 	TC_SETUP_CLSBPF,
+	TC_SETUP_QDISC_ETF,
 };
 
 /* These structures hold the attributes of bpf state that are being passed

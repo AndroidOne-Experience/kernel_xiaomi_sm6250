@@ -142,4 +142,9 @@ static inline bool is_classid_clsact_egress(u32 classid)
 	       TC_H_MIN(classid) == TC_H_MIN(TC_H_MIN_EGRESS);
 }
 
+struct tc_etf_qopt_offload {
+	u8 enable;
+	s32 queue;
+};
+
 #endif
