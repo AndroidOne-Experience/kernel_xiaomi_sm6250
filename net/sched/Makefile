@@ -38,6 +38,7 @@ obj-$(CONFIG_NET_SCH_SFQ)	+= sch_sfq.o
 obj-$(CONFIG_NET_SCH_TBF)	+= sch_tbf.o
 obj-$(CONFIG_NET_SCH_TEQL)	+= sch_teql.o
 obj-$(CONFIG_NET_SCH_PRIO)	+= sch_prio.o
+obj-$(CONFIG_NET_SCH_SKBPRIO)	+= sch_skbprio.o
 obj-$(CONFIG_NET_SCH_MULTIQ)	+= sch_multiq.o
 obj-$(CONFIG_NET_SCH_NETEM)	+= sch_netem.o
 obj-$(CONFIG_NET_SCH_DRR)	+= sch_drr.o
