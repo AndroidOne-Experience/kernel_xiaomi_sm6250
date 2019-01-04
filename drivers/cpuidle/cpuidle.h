@@ -6,6 +6,22 @@
 #ifndef __DRIVER_CPUIDLE_H
 #define __DRIVER_CPUIDLE_H
 
+#include <linux/device.h>
+#include <linux/pm_qos.h>
+#include <linux/cpu.h>
+
+static inline int cpuidle_governor_latency_req(unsigned int cpu)
+{
+	int latency_req = pm_qos_request(PM_QOS_CPU_DMA_LATENCY);
+	struct device *device = get_cpu_device(cpu);
+	int resume_latency = dev_pm_qos_raw_read_value(device);
+
+	if (resume_latency && resume_latency < latency_req)
+		latency_req = resume_latency;
+
+	return latency_req;
+}
+
 /* For internal use only */
 extern struct cpuidle_governor *cpuidle_curr_governor;
 extern struct list_head cpuidle_governors;
