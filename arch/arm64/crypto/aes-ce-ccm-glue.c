@@ -256,7 +256,7 @@ static int ccm_encrypt(struct aead_request *req)
 	/* preserve the original iv for the final round */
 	memcpy(buf, req->iv, AES_BLOCK_SIZE);
 
-	err = skcipher_walk_aead_encrypt(&walk, req, true);
+	err = skcipher_walk_aead_encrypt(&walk, req, false);
 
 	if (likely(use_neon)) {
 		while (walk.nbytes) {
@@ -315,7 +315,7 @@ static int ccm_decrypt(struct aead_request *req)
 	/* preserve the original iv for the final round */
 	memcpy(buf, req->iv, AES_BLOCK_SIZE);
 
-	err = skcipher_walk_aead_decrypt(&walk, req, true);
+	err = skcipher_walk_aead_decrypt(&walk, req, false);
 
 	if (likely(use_neon)) {
 		while (walk.nbytes) {
