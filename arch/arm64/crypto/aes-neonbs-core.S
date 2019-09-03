@@ -718,11 +718,6 @@ ENDPROC(aesbs_cbc_decrypt)
 	eor		\out\().16b, \out\().16b, \tmp\().16b
 	.endm
 
-	.align		4
-.Lxts_mul_x:
-CPU_LE(	.quad		1, 0x87		)
-CPU_BE(	.quad		0x87, 1		)
-
 	/*
 	 * aesbs_xts_encrypt(u8 out[], u8 const in[], u8 const rk[], int rounds,
 	 *		     int blocks, u8 iv[])
@@ -788,7 +783,9 @@ ENDPROC(__xts_crypt8)
 	stp		x29, x30, [sp, #-80]!
 	mov		x29, sp
 
-	ldr		q30, .Lxts_mul_x
+	movi		v30.2s, #0x1
+	movi		v25.2s, #0x87
+	uzp1		v30.4s, v30.4s, v25.4s
 	ld1		{v25.16b}, [x5]
 
 99:	adr		x7, \do8
