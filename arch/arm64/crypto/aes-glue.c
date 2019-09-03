@@ -121,7 +121,7 @@ static int skcipher_aes_setkey(struct crypto_skcipher *tfm, const u8 *in_key,
 	return aes_setkey(crypto_skcipher_tfm(tfm), in_key, key_len);
 }
 
-static int xts_set_key(struct crypto_skcipher *tfm, const u8 *in_key,
+static int __maybe_unused xts_set_key(struct crypto_skcipher *tfm, const u8 *in_key,
 		       unsigned int key_len)
 {
 	struct crypto_aes_xts_ctx *ctx = crypto_skcipher_ctx(tfm);
@@ -142,7 +142,7 @@ static int xts_set_key(struct crypto_skcipher *tfm, const u8 *in_key,
 	return -EINVAL;
 }
 
-static int ecb_encrypt(struct skcipher_request *req)
+static int __maybe_unused ecb_encrypt(struct skcipher_request *req)
 {
 	struct crypto_skcipher *tfm = crypto_skcipher_reqtfm(req);
 	struct crypto_aes_ctx *ctx = crypto_skcipher_ctx(tfm);
@@ -162,7 +162,7 @@ static int ecb_encrypt(struct skcipher_request *req)
 	return err;
 }
 
-static int ecb_decrypt(struct skcipher_request *req)
+static int __maybe_unused ecb_decrypt(struct skcipher_request *req)
 {
 	struct crypto_skcipher *tfm = crypto_skcipher_reqtfm(req);
 	struct crypto_aes_ctx *ctx = crypto_skcipher_ctx(tfm);
@@ -182,7 +182,7 @@ static int ecb_decrypt(struct skcipher_request *req)
 	return err;
 }
 
-static int cbc_encrypt(struct skcipher_request *req)
+static int __maybe_unused cbc_encrypt(struct skcipher_request *req)
 {
 	struct crypto_skcipher *tfm = crypto_skcipher_reqtfm(req);
 	struct crypto_aes_ctx *ctx = crypto_skcipher_ctx(tfm);
@@ -203,7 +203,7 @@ static int cbc_encrypt(struct skcipher_request *req)
 	return err;
 }
 
-static int cbc_decrypt(struct skcipher_request *req)
+static int __maybe_unused cbc_decrypt(struct skcipher_request *req)
 {
 	struct crypto_skcipher *tfm = crypto_skcipher_reqtfm(req);
 	struct crypto_aes_ctx *ctx = crypto_skcipher_ctx(tfm);
@@ -400,7 +400,7 @@ static int ctr_encrypt(struct skcipher_request *req)
 	return err;
 }
 
-static int ctr_encrypt_sync(struct skcipher_request *req)
+static int __maybe_unused ctr_encrypt_sync(struct skcipher_request *req)
 {
 	struct crypto_skcipher *tfm = crypto_skcipher_reqtfm(req);
 	struct crypto_aes_ctx *ctx = crypto_skcipher_ctx(tfm);
@@ -411,7 +411,7 @@ static int ctr_encrypt_sync(struct skcipher_request *req)
 	return ctr_encrypt(req);
 }
 
-static int xts_encrypt(struct skcipher_request *req)
+static int __maybe_unused xts_encrypt(struct skcipher_request *req)
 {
 	struct crypto_skcipher *tfm = crypto_skcipher_reqtfm(req);
 	struct crypto_aes_xts_ctx *ctx = crypto_skcipher_ctx(tfm);
@@ -433,7 +433,7 @@ static int xts_encrypt(struct skcipher_request *req)
 	return err;
 }
 
-static int xts_decrypt(struct skcipher_request *req)
+static int __maybe_unused xts_decrypt(struct skcipher_request *req)
 {
 	struct crypto_skcipher *tfm = crypto_skcipher_reqtfm(req);
 	struct crypto_aes_xts_ctx *ctx = crypto_skcipher_ctx(tfm);
