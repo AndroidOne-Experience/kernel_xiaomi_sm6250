@@ -1949,11 +1949,11 @@ update_task_rq_cpu_cycles(struct task_struct *p, struct rq *rq, int event,
 		else
 			rq->cc.time = wallclock - p->ravg.mark_start;
 		BUG_ON((s64)rq->cc.time < 0);
+
+		trace_sched_get_task_cpu_cycles(cpu, event, rq->cc.cycles, rq->cc.time, p);
 	}
 
 	p->cpu_cycles = cur_cycles;
-
-	trace_sched_get_task_cpu_cycles(cpu, event, rq->cc.cycles, rq->cc.time, p);
 }
 
 static inline void run_walt_irq_work(u64 old_window_start, struct rq *rq)
