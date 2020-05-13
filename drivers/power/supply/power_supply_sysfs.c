@@ -295,6 +295,7 @@ static struct device_attribute power_supply_attrs[] = {
 	POWER_SUPPLY_ATTR(capacity),
 	POWER_SUPPLY_ATTR(capacity_alert_min),
 	POWER_SUPPLY_ATTR(capacity_alert_max),
+	POWER_SUPPLY_ATTR(capacity_error_margin),
 	POWER_SUPPLY_ATTR(capacity_level),
 	POWER_SUPPLY_ATTR(soc_decimal),
 	POWER_SUPPLY_ATTR(soc_decimal_rate),
