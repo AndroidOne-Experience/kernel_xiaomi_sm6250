@@ -71,6 +71,7 @@
 #define CCI_I2C_MAX_READ 8192
 #define CCI_I2C_MAX_WRITE 8192
 #define CCI_I2C_MAX_BYTE_COUNT 65535
+#define REPORT_IDSIZE 16
 
 #define CAMX_CCI_DEV_NAME "cam-cci-driver"
 
