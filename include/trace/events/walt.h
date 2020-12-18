@@ -583,4 +583,22 @@ TRACE_EVENT(sched_load_to_gov,
 		__entry->sysctl_sched_little_cluster_coloc_fmin_khz,
 		__entry->coloc_boost_load)
 );
+
+TRACE_EVENT(walt_window_rollover,
+
+	TP_PROTO(u64 window_start),
+
+	TP_ARGS(window_start),
+
+	TP_STRUCT__entry(
+		__field(u64, window_start)
+	),
+
+	TP_fast_assign(
+		__entry->window_start = window_start;
+	),
+
+	TP_printk("window_start=%llu", __entry->window_start)
+);
+
 #endif
