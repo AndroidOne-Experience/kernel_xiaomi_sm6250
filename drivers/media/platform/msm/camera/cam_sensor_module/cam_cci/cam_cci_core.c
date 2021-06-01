@@ -1563,10 +1563,10 @@ static int32_t cam_cci_read_bytes(struct v4l2_subdev *sd,
 			read_cfg->num_byte = read_bytes;
 
 		if (read_cfg->num_byte >= CCI_READ_MAX) {
-			cci_dev->is_burst_read = true;
+			cci_dev->is_burst_read[master] = true;
 			rc = cam_cci_burst_read(sd, c_ctrl);
 		} else {
-			cci_dev->is_burst_read = false;
+			cci_dev->is_burst_read[master] = false;
 			rc = cam_cci_read(sd, c_ctrl);
 		}
 		if (rc) {
@@ -1585,7 +1585,7 @@ static int32_t cam_cci_read_bytes(struct v4l2_subdev *sd,
 	} while (read_bytes);
 
 ERROR:
-	cci_dev->is_burst_read = false;
+	cci_dev->is_burst_read[master] = false;
 	return rc;
 }
 
