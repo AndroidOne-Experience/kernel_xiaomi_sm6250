@@ -114,4 +114,5 @@
 
 #define SO_DETACH_REUSEPORT_BPF 68
 
+#define SO_NETNS_COOKIE		71
 #endif /* __ASM_GENERIC_SOCKET_H */
