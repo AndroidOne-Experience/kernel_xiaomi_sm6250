@@ -312,7 +312,7 @@ struct sock *tcp_try_fastopen(struct sock *sk, struct sk_buff *skb,
 		return NULL;
 	}
 
-	if (syn_data && (tcp_fastopen & TFO_SERVER_COOKIE_NOT_REQD))
+	if (tcp_fastopen & TFO_SERVER_COOKIE_NOT_REQD)
 		goto fastopen;
 
 	if (foc->len >= 0 &&  /* Client presents or requests a cookie */
