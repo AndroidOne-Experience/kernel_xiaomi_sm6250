@@ -332,7 +332,8 @@ int cam_sensor_i2c_command_parser(
 			(cmd_desc[i].offset >
 			(len_of_buff - sizeof(struct common_header)))) {
 			CAM_ERR(CAM_SENSOR, "buffer provided too small");
-			return -EINVAL;
+			rc = -EINVAL;
+			goto rel_buf;
 		}
 		cmd_buf = (uint32_t *)generic_ptr;
 		cmd_buf += cmd_desc[i].offset / sizeof(uint32_t);
@@ -340,7 +341,8 @@ int cam_sensor_i2c_command_parser(
 		remain_len -= cmd_desc[i].offset;
 		if (remain_len < cmd_desc[i].length) {
 			CAM_ERR(CAM_SENSOR, "buffer provided too small");
-			return -EINVAL;
+			rc = -EINVAL;
+			goto rel_buf;
 		}
 
 		while (byte_cnt < cmd_desc[i].length) {

@@ -495,14 +495,14 @@ int32_t cam_handle_mem_ptr(uint64_t handle, struct cam_sensor_ctrl_t *s_ctrl)
 			CAM_ERR(CAM_SENSOR,
 				"offset past length of buffer");
 			rc = -EINVAL;
-			goto rel_pkt_buf;
+			goto rel_cmd_buf;
 		}
 		remain_len = len - cmd_desc[i].offset;
 		if (cmd_desc[i].length > remain_len) {
 			CAM_ERR(CAM_SENSOR,
 				"Not enough buffer provided for cmd");
 			rc = -EINVAL;
-			goto rel_pkt_buf;
+			goto rel_cmd_buf;
 		}
 		cmd_buf = (uint32_t *)cmd_buf1;
 		cmd_buf += cmd_desc[i].offset/4;

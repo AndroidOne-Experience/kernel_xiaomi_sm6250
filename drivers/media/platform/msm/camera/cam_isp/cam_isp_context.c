@@ -324,6 +324,9 @@ put:
 			if (dump_to_buff) {
 				if (!cpu_addr || !offset || !buf_len) {
 					CAM_ERR(CAM_ISP, "Invalid args");
+					if (cam_mem_put_cpu_buf(req_isp->cfg[i].handle))
+						CAM_WARN(CAM_ISP, "Failed to put cpu buf: 0x%x",
+							req_isp->cfg[i].handle);
 					break;
 				}
 				dump_info.src_start = buf_start;
