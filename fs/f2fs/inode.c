@@ -813,14 +813,15 @@ no_delete:
 	stat_dec_compr_inode(inode);
 	stat_sub_compr_blocks(inode, F2FS_I(inode)->i_compr_blocks);
 
-	if (unlikely(is_inode_flag_set(inode, FI_DIRTY_INODE))) {
-		f2fs_inode_synced(inode);
-		f2fs_warn(sbi, "inconsistent dirty inode:%lu entry found during eviction\n",
-			 inode->i_ino);
-		if (!is_set_ckpt_flags(sbi, CP_ERROR_FLAG) &&
-		    !is_sbi_flag_set(sbi, SBI_CP_DISABLED))
-			f2fs_bug_on(sbi, 1);
-	}
+	if (likely(!f2fs_cp_error(sbi) &&
+				!is_sbi_flag_set(sbi, SBI_CP_DISABLED)))
+		f2fs_bug_on(sbi, is_inode_flag_set(inode, FI_DIRTY_INODE));
+
+	/*
+	 * anyway, it needs to remove the inode from sbi->inode_list[DIRTY_META]
+	 * list to avoid UAF in f2fs_sync_inode_meta() during checkpoint.
+	 */
+	f2fs_inode_synced(inode);
 
 	/* for the case f2fs_new_inode() was failed, .i_ino is zero, skip it */
 	if (inode->i_ino)
