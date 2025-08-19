@@ -1,5 +1,6 @@
 /* Copyright (c) 2008-2021, The Linux Foundation. All rights reserved.
  * Copyright (c) 2022-2023, Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) Qualcomm Technologies, Inc. and/or its subsidiaries.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -9,7 +10,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ */
  */
 #include <linux/module.h>
 #include <linux/fb.h>
@@ -364,6 +365,7 @@ static void kgsl_destroy_ion(struct kgsl_memdesc *memdesc)
 	 * doesn't try to free it again
 	 */
 	memdesc->sgt = NULL;
+	entry->priv_data = NULL;
 }
 
 static struct kgsl_memdesc_ops kgsl_dmabuf_ops = {
