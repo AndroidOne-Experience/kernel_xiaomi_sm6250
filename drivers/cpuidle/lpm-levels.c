@@ -124,6 +124,31 @@ uint32_t register_system_pm_ops(struct system_pm_ops *pm_ops)
 	return 0;
 }
 
+static void update_debug_pc_event(enum debug_event event, uint32_t arg1,
+		uint32_t arg2, uint32_t arg3, uint32_t arg4)
+{
+	struct lpm_debug *dbg;
+	int idx;
+	static DEFINE_SPINLOCK(debug_lock);
+	static int pc_event_index;
+
+	if (!lpm_debug)
+		return;
+
+	spin_lock(&debug_lock);
+	idx = pc_event_index++;
+	dbg = &lpm_debug[idx & (num_dbg_elements - 1)];
+
+	dbg->evt = event;
+	dbg->time = arch_counter_get_cntpct();
+	dbg->cpu = raw_smp_processor_id();
+	dbg->arg1 = arg1;
+	dbg->arg2 = arg2;
+	dbg->arg3 = arg3;
+	dbg->arg4 = arg4;
+	spin_unlock(&debug_lock);
+}
+
 static int lpm_dying_cpu(unsigned int cpu)
 {
 	struct lpm_cluster *cluster = per_cpu(cpu_lpm, cpu)->parent;
