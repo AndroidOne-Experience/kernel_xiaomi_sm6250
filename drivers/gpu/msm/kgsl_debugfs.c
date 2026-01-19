@@ -8,7 +8,7 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ */
  */
 
 #include <linux/module.h>
@@ -111,7 +111,7 @@ static const char *memtype_str(int memtype)
 
 static char get_alignflag(const struct kgsl_memdesc *m)
 {
-	int align = kgsl_memdesc_get_align(m);
+	u32 align = kgsl_memdesc_get_align(m);
 
 	if (align >= ilog2(SZ_1M))
 		return 'L';
