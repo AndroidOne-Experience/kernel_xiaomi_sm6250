@@ -18,7 +18,7 @@ DTBO = KERNEL_DIR / "out/arch/arm64/boot/dtbo.img"
 DTB = KERNEL_DIR / "out/arch/arm64/boot/dts/qcom/cust-atoll-ab.dtb"
 
 VERBOSE = 0
-ZIPNAME = "RedCherry"
+ZIPNAME = "PososalChlen1337"
 COMPILER = "aosp"
 LINKER = "ld.lld"
 LOG_FILE = KERNEL_DIR / "log.txt"
