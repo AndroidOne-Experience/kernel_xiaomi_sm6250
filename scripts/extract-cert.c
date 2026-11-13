@@ -21,7 +21,10 @@
 #include <openssl/bio.h>
 #include <openssl/pem.h>
 #include <openssl/err.h>
+#include <openssl/opensslv.h>
+#if OPENSSL_VERSION_NUMBER < 0x30000000L
 #include <openssl/engine.h>
+#endif
 
 /*
  * OpenSSL 3.0 deprecates the OpenSSL's ENGINE API.
@@ -119,6 +122,10 @@ int main(int argc, char **argv)
 		fclose(f);
 		exit(0);
 	} else if (!strncmp(cert_src, "pkcs11:", 7)) {
+#if defined(OPENSSL_NO_ENGINE) || OPENSSL_VERSION_NUMBER >= 0x30000000L
+		fprintf(stderr, "PKCS#11 not supported with OpenSSL 3.0+\n");
+		exit(1);
+#else
 		ENGINE *e;
 		struct {
 			const char *cert_id;
@@ -141,6 +148,7 @@ int main(int argc, char **argv)
 		ENGINE_ctrl_cmd(e, "LOAD_CERT_CTRL", 0, &parms, NULL, 1);
 		ERR(!parms.cert, "Get X.509 from PKCS#11");
 		write_cert(parms.cert);
+#endif
 	} else {
 		BIO *b;
 		X509 *x509;
