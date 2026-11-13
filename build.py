@@ -8,7 +8,7 @@ from datetime import datetime
 from pathlib import Path
 
 # Constants
-KERNEL_DIR = Path.cwd()
+KERNEL_DIR = Path(__file__).resolve().parent
 MODEL = "Xiaomi"
 DEVICE = "Miatoll"
 DEFCONFIG = "vendor/xiaomi/miatoll_defconfig"
@@ -76,8 +76,8 @@ def clean_previous_files():
         (ANYKERNEL_DIR / file).unlink(missing_ok=True)
     shutil.rmtree(ANYKERNEL_DIR / "dtb", ignore_errors=True)
 
-    run_cmd(["make", "clean"], live=True)
-    run_cmd(["make", "mrproper"], live=True)
+    if (KERNEL_DIR / "out").exists():
+        run_cmd(["make", "ARCH=arm64", "O=out", "clean"], live=True)
 
 def clone_toolchains():
     log(f"Cloning toolchain for compiler: {COMPILER}")
@@ -164,7 +164,11 @@ def zip_kernel(final_zip):
         shutil.copy(DTB, ANYKERNEL_DIR / "dtb")
 
         os.chdir(ANYKERNEL_DIR)
-        run_cmd(["zip", "-r9", final_zip, "."], live=True)
+        run_cmd([
+            "zip", "-r9", final_zip, ".",
+            "-x", ".git*", "-x", ".github*", "-x", "README.md",
+            "-x", "*.zip", "-x", "zipsigner*"
+        ], live=True)
         with open(final_zip, "rb") as f:
             md5 = hashlib.md5(f.read()).hexdigest()
         log(f"MD5: {md5}")
