@@ -114,13 +114,22 @@ static bool sugov_should_update_freq(struct sugov_policy *sg_policy, u64 time)
 	if (!cpufreq_this_cpu_can_update(sg_policy->policy))
 		return false;
 
-	if (unlikely(sg_policy->need_freq_update)) {
-		sg_policy->need_freq_update = false;
+	if (unlikely(READ_ONCE(sg_policy->need_freq_update))) {
+		WRITE_ONCE(sg_policy->need_freq_update, false);
 		/*
 		 * This happens when limits change, so forget the previous
 		 * next_freq value and force an update.
 		 */
 		sg_policy->next_freq = UINT_MAX;
+		/*
+		 * The above need_freq_update update must occur before the reads
+		 * of policy limits in cpufreq_driver_resolve_freq() or a policy
+		 * limits update might be missed, so use a memory barrier to
+		 * ensure it.
+		 *
+		 * This pairs with the write memory barrier in sugov_limits().
+		 */
+		smp_mb();
 		return true;
 	}
 	/* No need to recalculate next freq for min_rate_limit_us
@@ -1114,7 +1123,16 @@ static void sugov_limits(struct cpufreq_policy *policy)
 		raw_spin_unlock_irqrestore(&sg_policy->update_lock, flags);
 	}
 
-	sg_policy->need_freq_update = true;
+	/*
+	 * The need_freq_update update below must take place before the updates
+	 * of policy limits in cpufreq_set_policy() or a policy limits update
+	 * might be missed, so use a memory barrier to ensure it.
+	 *
+	 * This pairs with the memory barrier in sugov_should_update_freq().
+	 */
+	smp_wmb();
+
+	WRITE_ONCE(sg_policy->need_freq_update, true);
 }
 
 static struct cpufreq_governor schedutil_gov = {
