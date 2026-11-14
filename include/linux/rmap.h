@@ -259,12 +259,6 @@ void try_to_munlock(struct page *);
 
 void remove_migration_ptes(struct page *old, struct page *new, bool locked);
 
-/*
- * Called by memory-failure.c to kill processes.
- */
-struct anon_vma *page_lock_anon_vma_read(struct page *page,
-					 struct rmap_walk_control *rwc);
-void page_unlock_anon_vma_read(struct anon_vma *anon_vma);
 int page_mapped_in_vma(struct page *page, struct vm_area_struct *vma);
 
 /*
@@ -295,6 +289,13 @@ struct rmap_walk_control {
 
 void rmap_walk(struct page *page, struct rmap_walk_control *rwc);
 void rmap_walk_locked(struct page *page, struct rmap_walk_control *rwc);
+
+/*
+ * Called by memory-failure.c to kill processes.
+ */
+struct anon_vma *page_lock_anon_vma_read(struct page *page,
+					 struct rmap_walk_control *rwc);
+void page_unlock_anon_vma_read(struct anon_vma *anon_vma);
 
 #else	/* !CONFIG_MMU */
 
