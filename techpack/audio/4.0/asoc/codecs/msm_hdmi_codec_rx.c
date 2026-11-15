@@ -340,7 +340,7 @@ static int msm_ext_disp_audio_device_get(struct snd_kcontrol *kcontrol,
 	int dai_id = ((struct soc_multi_mixer_control *)
 				kcontrol->private_value)->shift;
 
-	if (dai_id < 0 || dai_id > DP_DAI2) {
+	if (dai_id < 0 || dai_id >= DP_DAI_MAX) {
 		dev_err(codec->dev,
 			"%s: invalid dai id: %d\n", __func__, dai_id);
 		rc = -EINVAL;
@@ -371,7 +371,7 @@ static int msm_ext_disp_audio_device_set(struct snd_kcontrol *kcontrol,
 	int dai_id = ((struct soc_multi_mixer_control *)
 				kcontrol->private_value)->shift;
 
-	if (dai_id < 0 || dai_id > DP_DAI2) {
+	if (dai_id < 0 || dai_id >= DP_DAI_MAX) {
 		dev_err(codec->dev,
 			"%s: invalid dai id: %d\n", __func__, dai_id);
 		rc = -EINVAL;
