@@ -1148,7 +1148,6 @@ thermal_cooling_device_upper_limit_show(struct device *dev,
 
 	return snprintf(buf, PAGE_SIZE, "%lu\n", instance->upper);
 }
-}
 
 /* these helper will be used only at the time of bindig */
 ssize_t
