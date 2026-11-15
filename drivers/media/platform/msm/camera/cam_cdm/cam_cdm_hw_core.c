@@ -612,9 +612,11 @@ static void cam_hw_cdm_work(struct work_struct *work)
 				list_del_init(&node->entry);
 				if (node->bl_tag == payload->irq_data) {
 					kfree(node);
+					node = NULL;
 					break;
 				}
 				kfree(node);
+				node = NULL;
 			}
 			mutex_unlock(&cdm_hw->hw_mutex);
 		}
@@ -958,7 +960,7 @@ int cam_hw_cdm_probe(struct platform_device *pdev)
 	cdm_core->iommu_hdl.secure = -1;
 
 	cdm_core->work_queue = alloc_workqueue(cdm_core->name,
-		WQ_UNBOUND | WQ_MEM_RECLAIM | WQ_SYSFS,
+		WQ_UNBOUND | WQ_MEM_RECLAIM | WQ_SYSFS | WQ_HIGHPRI,
 		CAM_CDM_INFLIGHT_WORKS);
 
 	rc = cam_soc_util_request_platform_resource(&cdm_hw->soc_info,
