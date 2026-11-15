@@ -5754,9 +5754,26 @@ static int cam_ife_hw_mgr_handle_eof_for_camif_hw_res(
 	list_for_each_entry(isp_ife_camif_res,
 		&ife_hwr_mgr_ctx->res_list_ife_src, list) {
 
-		if ((isp_ife_camif_res->res_type ==
-			CAM_IFE_HW_MGR_RES_UNINIT) ||
-			(isp_ife_camif_res->res_id != CAM_ISP_HW_VFE_IN_CAMIF))
+		if (isp_ife_camif_res->res_type ==
+			CAM_IFE_HW_MGR_RES_UNINIT)
+			continue;
+
+		if (ife_hwr_mgr_ctx->is_rdi_only_context) {
+			if ((isp_ife_camif_res->res_id >= CAM_ISP_HW_VFE_IN_RDI0) &&
+				(isp_ife_camif_res->res_id <= CAM_ISP_HW_VFE_IN_RDI3)) {
+				if (atomic_read(&ife_hwr_mgr_ctx->overflow_pending))
+					break;
+				eof_done_event_data.irq_mono_boot_time =
+					evt_payload->ts.time_usecs;
+				ife_hwr_irq_eof_cb(
+					ife_hwr_mgr_ctx->common.cb_priv,
+					CAM_ISP_HW_EVENT_EOF,
+					&eof_done_event_data);
+				break;
+			}
+		}
+
+		if (isp_ife_camif_res->res_id != CAM_ISP_HW_VFE_IN_CAMIF)
 			continue;
 
 		hw_res_l = isp_ife_camif_res->hw_res[0];
