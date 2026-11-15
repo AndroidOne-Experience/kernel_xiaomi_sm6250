@@ -4714,6 +4714,7 @@ static int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index,
 		int desc_len;
 		int ascii_len;
 		int i;
+		int ret;
 		char *buff_ascii;
 
 		desc_len = buf[0];
@@ -4734,14 +4735,15 @@ static int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index,
 
 		/*
 		 * the descriptor contains string in UTF16 format
-		 * we need to convert to utf-8 so it can be displayed
+		 * we need to convert to utf-8 so it can be displayed.
+		 * Leave space for '\0' in utf8 desc string.
 		 */
-		utf16s_to_utf8s((wchar_t *)&buf[QUERY_DESC_HDR_SIZE],
+		ret = utf16s_to_utf8s((wchar_t *)&buf[QUERY_DESC_HDR_SIZE],
 				desc_len - QUERY_DESC_HDR_SIZE,
-				UTF16_BIG_ENDIAN, buff_ascii, ascii_len);
+				UTF16_BIG_ENDIAN, buff_ascii, ascii_len - 1);
 
 		/* replace non-printable or non-ASCII characters with spaces */
-		for (i = 0; i < ascii_len; i++)
+		for (i = 0; i < ret; i++)
 			ufshcd_remove_non_printable(&buff_ascii[i]);
 
 		memset(buf + QUERY_DESC_HDR_SIZE, 0,
@@ -6391,7 +6393,8 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
 		break;
 	} /* end of switch */
 
-	if ((host_byte(result) != DID_OK) && !hba->silence_err_logs) {
+	if ((host_byte(result) != DID_OK) &&
+	    (host_byte(result) != DID_REQUEUE) && !hba->silence_err_logs) {
 		print_prdt = (ocs == OCS_INVALID_PRDT_ATTR ||
 			ocs == OCS_MISMATCH_DATA_BUF_SIZE);
 		ufshcd_print_trs(hba, 1 << lrbp->task_tag, print_prdt);
@@ -7572,7 +7575,7 @@ static irqreturn_t ufshcd_intr(int irq, void *__hba)
 		intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
 	}
 
-	if (retval == IRQ_NONE) {
+	if (retval == IRQ_NONE && !ufshcd_eh_in_progress(hba)) {
 		dev_err(hba->dev, "%s: Unhandled interrupt 0x%08x\n",
 					__func__, intr_status);
 		ufshcd_hex_dump(hba, "host regs: ", hba->mmio_base,
