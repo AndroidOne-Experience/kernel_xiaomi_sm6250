@@ -485,9 +485,12 @@ struct sk_psock *sk_psock_init(struct sock *sk, int node)
 	struct sk_psock *psock = kzalloc_node(sizeof(*psock),
 					      GFP_ATOMIC | __GFP_NOWARN,
 					      node);
+	struct proto *prot;
+
 	if (!psock)
 		return NULL;
 
+	prot = READ_ONCE(sk->sk_prot);
 	psock->sk = sk;
 	psock->eval =  __SK_NONE;
 	psock->saved_destroy = prot->destroy;
@@ -740,8 +743,6 @@ EXPORT_SYMBOL_GPL(sk_psock_tls_strp_read);
 static void sk_psock_verdict_apply(struct sk_psock *psock,
 				   struct sk_buff *skb, int verdict)
 {
-	struct sock *sk_other;
-
 	switch (verdict) {
 	case __SK_REDIRECT:
 		sk_psock_skb_redirect(psock, skb);
@@ -749,7 +750,6 @@ static void sk_psock_verdict_apply(struct sk_psock *psock,
 	case __SK_DROP:
 		/* fall-through */
 	default:
-out_free:
 		kfree_skb(skb);
 	}
 }
