@@ -26,6 +26,8 @@
 #include <linux/of_gpio.h>
 #include <linux/of_irq.h>
 #include <linux/pm_runtime.h>
+#include <linux/sched.h>
+#include <linux/power_supply.h>
 
 #if defined(CONFIG_FB)
 #ifdef CONFIG_DRM_MSM
@@ -231,7 +233,7 @@ static void nvt_ts_usb_plugin_work_func(struct work_struct *work)
 	mutex_lock(&ts->lock);
 	NVT_LOG("usb_plugged_in = %d\n", g_touchscreen_usb_pulgin.usb_plugged_in);
 
-	msleep(35);
+	usleep_range(1000, 2000);
 
 	//---set xdata index to EVENT BUF ADDR---
 	ret = nvt_set_page(ts->mmap->EVENT_BUF_ADDR | EVENT_MAP_HOST_CMD);
@@ -1298,6 +1300,35 @@ static uint8_t nvt_wdt_fw_recovery(uint8_t *point_data)
 }
 #endif	/* #if NVT_TOUCH_WDT_RECOVERY */
 
+/*******************************************************
+Description:
+	Novatek touchscreen release all fingers function.
+
+return:
+	n.a.
+*******************************************************/
+void nvt_release_all_finger(void)
+{
+	int32_t i = 0;
+
+	if (!ts || !ts->input_dev)
+		return;
+
+#if MT_PROTOCOL_B
+	for (i = 0; i < ts->max_touch_num; i++) {
+		input_mt_slot(ts->input_dev, i);
+		input_report_abs(ts->input_dev, ABS_MT_TOUCH_MAJOR, 0);
+		input_report_abs(ts->input_dev, ABS_MT_PRESSURE, 0);
+		input_mt_report_slot_state(ts->input_dev, MT_TOOL_FINGER, false);
+	}
+#endif
+	input_report_key(ts->input_dev, BTN_TOUCH, 0);
+#if !MT_PROTOCOL_B
+	input_mt_sync(ts->input_dev);
+#endif
+	input_sync(ts->input_dev);
+}
+
 #define FUNCPAGE_PALM 4
 #define PACKET_PALM_ON 3
 #define PACKET_PALM_OFF 4
@@ -1366,6 +1397,11 @@ static irqreturn_t nvt_ts_work_func(int irq, void *data)
 #endif
 #endif
 
+	if (unlikely(!ts->rt_prio_set)) {
+		sched_set_fifo(current);
+		ts->rt_prio_set = true;
+	}
+
 	mutex_lock(&ts->lock);
 
 	ret = CTP_SPI_READ(ts->client, point_data, POINT_DATA_LEN + 1);
@@ -1387,6 +1423,7 @@ static irqreturn_t nvt_ts_work_func(int irq, void *data)
    /* ESD protect by WDT */
    if (nvt_wdt_fw_recovery(point_data)) {
        NVT_ERR("Recover for fw reset, %02X\n", point_data[1]);
+       nvt_release_all_finger();
        nvt_update_firmware(ts->boot_update_firmware_name);
        goto XFER_ERROR;
    }
@@ -1395,6 +1432,7 @@ static irqreturn_t nvt_ts_work_func(int irq, void *data)
 #if NVT_TOUCH_ESD_PROTECT
 	/* ESD protect by FW handshake */
 	if (nvt_fw_recovery(point_data)) {
+		nvt_release_all_finger();
 		nvt_esd_check_enable(true);
 		goto XFER_ERROR;
 	}
@@ -2048,6 +2086,11 @@ static int32_t nvt_ts_probe(struct spi_device *client)
 
 #if NVT_USB_PLUGIN
 	g_touchscreen_usb_pulgin.event_callback = nvt_ts_usb_event_callback;
+	g_touchscreen_usb_pulgin.valid = true;
+	if (g_touchscreen_usb_pulgin.usb_plugged_in || power_supply_is_system_supplied() > 0) {
+		g_touchscreen_usb_pulgin.usb_plugged_in = true;
+		g_touchscreen_usb_pulgin.event_callback();
+	}
 #endif
 
 	//spi bus pm_runtime_get
@@ -2198,6 +2241,12 @@ static int32_t nvt_ts_remove(struct spi_device *client)
 	device_init_wakeup(&ts->input_dev->dev, 0);
 #endif
 
+#if NVT_USB_PLUGIN
+	g_touchscreen_usb_pulgin.valid = false;
+	g_touchscreen_usb_pulgin.event_callback = NULL;
+	cancel_work_sync(&nvt_usb_plugin_work);
+#endif
+
 	nvt_irq_enable(false);
 	free_irq(client->irq, ts);
 
@@ -2290,9 +2339,6 @@ return:
 static int32_t nvt_ts_suspend(struct device *dev)
 {
 	uint8_t buf[4] = {0};
-#if MT_PROTOCOL_B
-	uint32_t i = 0;
-#endif
 
 	if (!bTouchIsAwake) {
 		NVT_LOG("Touch is already suspend\n");
@@ -2348,19 +2394,7 @@ static int32_t nvt_ts_suspend(struct device *dev)
 	mutex_unlock(&ts->lock);
 
 	/* release all touches */
-#if MT_PROTOCOL_B
-	for (i = 0; i < ts->max_touch_num; i++) {
-		input_mt_slot(ts->input_dev, i);
-		input_report_abs(ts->input_dev, ABS_MT_TOUCH_MAJOR, 0);
-		input_report_abs(ts->input_dev, ABS_MT_PRESSURE, 0);
-		input_mt_report_slot_state(ts->input_dev, MT_TOOL_FINGER, 0);
-	}
-#endif
-	input_report_key(ts->input_dev, BTN_TOUCH, 0);
-#if !MT_PROTOCOL_B
-	input_mt_sync(ts->input_dev);
-#endif
-	input_sync(ts->input_dev);
+	nvt_release_all_finger();
 
 	msleep(50);
 
@@ -2428,8 +2462,12 @@ static int32_t nvt_ts_resume(struct device *dev)
 #endif
 
 #if NVT_USB_PLUGIN
-	if (g_touchscreen_usb_pulgin.valid && g_touchscreen_usb_pulgin.usb_plugged_in)
-		g_touchscreen_usb_pulgin.event_callback();
+	if (g_touchscreen_usb_pulgin.valid) {
+		if (power_supply_is_system_supplied() > 0)
+			g_touchscreen_usb_pulgin.usb_plugged_in = true;
+		if (g_touchscreen_usb_pulgin.usb_plugged_in)
+			g_touchscreen_usb_pulgin.event_callback();
+	}
 #endif
 
 	NVT_LOG("end\n");

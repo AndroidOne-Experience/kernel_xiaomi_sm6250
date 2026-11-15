@@ -172,10 +172,11 @@ struct nvt_ts_data {
 	uint8_t carrier_system;
 	uint8_t hw_crc;
 	uint16_t nvt_pid;
-	uint8_t rbuf[1025];
+	uint8_t rbuf[1025] ____cacheline_aligned;
 	uint8_t *xbuf;
 	struct mutex xbuf_lock;
 	bool irq_enabled;
+	bool rt_prio_set;
 #if WAKEUP_GESTURE
 	bool delay_gesture;
 	bool is_gesture_mode;
@@ -237,6 +238,7 @@ typedef enum {
 extern struct nvt_ts_data *ts;
 
 //---extern functions---
+void nvt_release_all_finger(void);
 int32_t CTP_SPI_READ(struct spi_device *client, uint8_t *buf, uint16_t len);
 int32_t CTP_SPI_WRITE(struct spi_device *client, uint8_t *buf, uint16_t len);
 void nvt_bootloader_reset(void);

@@ -38,6 +38,8 @@
 #include <linux/of_device.h>
 #include <linux/of_gpio.h>
 #include <linux/of_irq.h>
+#include <linux/sched.h>
+#include <linux/power_supply.h>
 #if defined(CONFIG_FB)
 #include <linux/notifier.h>
 #include <linux/msm_drm_notify.h>
@@ -737,8 +739,13 @@ static void fts_irq_read_report(void)
 
 static irqreturn_t fts_irq_handler(int irq, void *data)
 {
-
 	int ret = 0;
+
+	if (unlikely(!fts_data->rt_prio_set)) {
+		sched_set_fifo(current);
+		fts_data->rt_prio_set = true;
+	}
+
 	if (fts_data->dev_pm_suspend && fts_data->gesture_mode) {
 		ret = wait_for_completion_timeout(&fts_data->dev_pm_suspend_completion, msecs_to_jiffies(700));
 		if (!ret) {
@@ -1594,6 +1601,11 @@ static int fts_ts_probe_entry(struct fts_ts_data *ts_data)
 
 #if LCT_TP_USB_PLUGIN
 	g_touchscreen_usb_pulgin.event_callback = fts_ts_usb_event_callback;
+	g_touchscreen_usb_pulgin.valid = true;
+	if (g_touchscreen_usb_pulgin.usb_plugged_in || power_supply_is_system_supplied() > 0) {
+		g_touchscreen_usb_pulgin.usb_plugged_in = true;
+		g_touchscreen_usb_pulgin.event_callback();
+	}
 #endif
 	lcd_esd_enable(1);
 	if (ts_data->fts_tp_class == NULL) {
@@ -1660,6 +1672,11 @@ static int fts_ts_remove_entry(struct fts_ts_data *ts_data)
 
 	fts_gesture_exit(ts_data);
 	fts_bus_exit(ts_data);
+
+#if LCT_TP_USB_PLUGIN
+	g_touchscreen_usb_pulgin.valid = false;
+	g_touchscreen_usb_pulgin.event_callback = NULL;
+#endif
 
 	free_irq(ts_data->irq, ts_data);
 	input_unregister_device(ts_data->input_dev);
@@ -1788,8 +1805,12 @@ static int fts_ts_resume(struct device *dev)
 	fts_irq_enable();
 
 #if LCT_TP_USB_PLUGIN
-	if (g_touchscreen_usb_pulgin.valid)
-		g_touchscreen_usb_pulgin.event_callback();
+	if (g_touchscreen_usb_pulgin.valid) {
+		if (power_supply_is_system_supplied() > 0)
+			g_touchscreen_usb_pulgin.usb_plugged_in = true;
+		if (g_touchscreen_usb_pulgin.usb_plugged_in)
+			g_touchscreen_usb_pulgin.event_callback();
+	}
 #endif
 	lcd_esd_enable(1);
 	FTS_FUNC_EXIT();
