@@ -937,8 +937,9 @@ static int smb5_parse_dt(struct smb5 *chip)
 	if (rc < 0)
 		return rc;
 
-	chip->dt.disable_suspend_on_collapse = of_property_read_bool(node,
+	chg->disable_suspend_on_collapse = of_property_read_bool(node,
 					"qcom,disable-suspend-on-collapse");
+	chip->dt.disable_suspend_on_collapse = chg->disable_suspend_on_collapse;
 
 	of_property_read_u32(node, "qcom,fcc-step-delay-ms",
 					&chg->chg_param.fcc_step_delay_ms);

@@ -520,6 +520,7 @@ struct smb_charger {
 	int			otg_delay_ms;
 	int			*weak_chg_icl_ua;
 	bool			pd_not_supported;
+	bool			disable_suspend_on_collapse;
 
 	/* locks */
 	struct mutex		smb_lock;

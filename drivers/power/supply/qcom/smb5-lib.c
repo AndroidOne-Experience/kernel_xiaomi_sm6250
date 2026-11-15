@@ -22,6 +22,7 @@
 #include <linux/pmic-voter.h>
 #include <linux/of_batterydata.h>
 #include <linux/ktime.h>
+#include <linux/alarmtimer.h>
 #include <linux/board_id.h>
 #include "smb5-lib.h"
 #include "smb5-reg.h"
@@ -1023,6 +1024,7 @@ static int smblib_set_usb_pd_fsw(struct smb_charger *chg, int voltage)
 
 #define CONT_AICL_HEADROOM_MV		1000
 #define AICL_THRESHOLD_MV_IN_CC		5000
+#define VSAFE5V_SETTLE_US		40000
 static int smblib_set_usb_pd_allowed_voltage(struct smb_charger *chg,
 					int min_allowed_uv, int max_allowed_uv)
 {
@@ -1047,6 +1049,14 @@ static int smblib_set_usb_pd_allowed_voltage(struct smb_charger *chg,
 				min_allowed_uv, max_allowed_uv);
 		return -EINVAL;
 	}
+
+	/*
+	 * usbin-ov interrupt is seen with some USBPD adapters when moving
+	 * from 9V to 5V. To avoid this, add delay here to wait VBUS voltage
+	 * settled before updating VBUS allowance to 5V.
+	 */
+	if (vbus_allowance == FORCE_5V)
+		usleep_range(VSAFE5V_SETTLE_US, VSAFE5V_SETTLE_US + 1);
 
 	rc = smblib_usb_pd_adapter_allowance_override(chg, vbus_allowance);
 	if (rc < 0) {
@@ -1568,12 +1578,14 @@ static void smblib_uusb_removal(struct smb_charger *chg)
 			smblib_err(chg, "Couldn't restore max pulses rc=%d\n",
 					rc);
 
-		rc = smblib_masked_write(chg, USBIN_AICL_OPTIONS_CFG_REG,
-				SUSPEND_ON_COLLAPSE_USBIN_BIT,
-				SUSPEND_ON_COLLAPSE_USBIN_BIT);
-		if (rc < 0)
-			smblib_err(chg, "Couldn't turn on SUSPEND_ON_COLLAPSE_USBIN_BIT rc=%d\n",
-					rc);
+		if (!chg->disable_suspend_on_collapse) {
+			rc = smblib_masked_write(chg, USBIN_AICL_OPTIONS_CFG_REG,
+					SUSPEND_ON_COLLAPSE_USBIN_BIT,
+					SUSPEND_ON_COLLAPSE_USBIN_BIT);
+			if (rc < 0)
+				smblib_err(chg, "Couldn't turn on SUSPEND_ON_COLLAPSE_USBIN_BIT rc=%d\n",
+						rc);
+		}
 
 		chg->qc2_unsupported_voltage = QC2_COMPLIANT;
 	}
@@ -5867,7 +5879,9 @@ static void smblib_eval_chg_termination(struct smb_charger *chg, u8 batt_status)
 	 * battery. Trigger the charge termination WA once charging is completed
 	 * to prevent overcharing.
 	 */
-	if ((batt_status == TERMINATE_CHARGE) && (pval.intval == 100)) {
+	if ((batt_status == TERMINATE_CHARGE) && (pval.intval == 100) &&
+		(ktime_to_ms(alarm_expires_remaining(
+				&chg->chg_termination_alarm)) <= 0)) {
 		chg->cc_soc_ref = 0;
 		chg->last_cc_soc = 0;
 		chg->term_vbat_uv = 0;
@@ -7489,12 +7503,14 @@ static void typec_src_removal(struct smb_charger *chg)
 			smblib_err(chg, "Couldn't restore max pulses rc=%d\n",
 					rc);
 
-		rc = smblib_masked_write(chg, USBIN_AICL_OPTIONS_CFG_REG,
-				SUSPEND_ON_COLLAPSE_USBIN_BIT,
-				SUSPEND_ON_COLLAPSE_USBIN_BIT);
-		if (rc < 0)
-			smblib_err(chg, "Couldn't turn on SUSPEND_ON_COLLAPSE_USBIN_BIT rc=%d\n",
-					rc);
+		if (!chg->disable_suspend_on_collapse) {
+			rc = smblib_masked_write(chg, USBIN_AICL_OPTIONS_CFG_REG,
+					SUSPEND_ON_COLLAPSE_USBIN_BIT,
+					SUSPEND_ON_COLLAPSE_USBIN_BIT);
+			if (rc < 0)
+				smblib_err(chg, "Couldn't turn on SUSPEND_ON_COLLAPSE_USBIN_BIT rc=%d\n",
+						rc);
+		}
 
 		chg->qc2_unsupported_voltage = QC2_COMPLIANT;
 	}
@@ -9031,6 +9047,9 @@ static void smblib_lpd_ra_open_work(struct work_struct *work)
 	if (!(stat & TYPEC_WATER_DETECTION_STATUS_BIT)
 			|| (stat & TYPEC_TCCDEBOUNCE_DONE_STATUS_BIT)) {
 		chg->lpd_stage = LPD_STAGE_NONE;
+
+		/* Remove LPD_VOTER from ICL if moisture status is gone in attached state */
+		vote(chg->usb_icl_votable, LPD_VOTER, false, 0);
 		goto out;
 	}
 
