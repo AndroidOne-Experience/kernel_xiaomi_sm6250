@@ -425,23 +425,21 @@ unsigned int walt_big_tasks(int cpu)
 void clear_walt_request(int cpu)
 {
 	struct rq *rq = cpu_rq(cpu);
+	struct task_struct *push_task = NULL;
 	unsigned long flags;
 
 	clear_reserved(cpu);
-	if (rq->push_task) {
-		struct task_struct *push_task = NULL;
 
-		raw_spin_lock_irqsave(&rq->lock, flags);
-		if (rq->push_task) {
-			push_task = rq->push_task;
-			rq->push_task = NULL;
-		}
-		clear_reserved(rq->push_cpu);
-		rq->active_balance = 0;
-		raw_spin_unlock_irqrestore(&rq->lock, flags);
-		if (push_task)
-			put_task_struct(push_task);
+	raw_spin_lock_irqsave(&rq->lock, flags);
+	if (rq->push_task) {
+		push_task = rq->push_task;
+		rq->push_task = NULL;
 	}
+	clear_reserved(rq->push_cpu);
+	rq->active_balance = 0;
+	raw_spin_unlock_irqrestore(&rq->lock, flags);
+	if (push_task)
+		put_task_struct(push_task);
 }
 
 void sched_account_irqtime(int cpu, struct task_struct *curr,
