@@ -1718,6 +1718,7 @@ static int msm_compr_playback_open(struct snd_compr_stream *cstream)
 	atomic_set(&prtd->eos, 0);
 	atomic_set(&prtd->start, 0);
 	atomic_set(&prtd->drain, 0);
+	snd_compr_use_pause_in_draining(cstream);
 	atomic_set(&prtd->xrun, 0);
 	atomic_set(&prtd->close, 0);
 	atomic_set(&prtd->wait_on_close, 0);
