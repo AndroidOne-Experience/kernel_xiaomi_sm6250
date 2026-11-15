@@ -129,6 +129,13 @@ static int cam_isp_update_dual_config(
 	cpu_addr += (cmd_desc->offset / 4);
 	dual_config = (struct cam_isp_dual_config *)cpu_addr;
 
+	if (dual_config->num_ports > size_isp_out) {
+		CAM_ERR(CAM_ISP, "num_ports %d more than max_vfe_out_res %d",
+			dual_config->num_ports, size_isp_out);
+		rc = -EINVAL;
+		goto put_buf;
+	}
+
 	if ((dual_config->num_ports *
 		sizeof(struct cam_isp_dual_stripe_config)) >
 		(remain_len - offsetof(struct cam_isp_dual_config, stripes))) {
