@@ -356,6 +356,7 @@ static void kgsl_destroy_ion(struct kgsl_memdesc *memdesc)
 		dma_buf_detach(meta->dmabuf, meta->attach);
 		dma_buf_put(meta->dmabuf);
 		kfree(meta);
+		entry->priv_data = NULL;
 	}
 
 	/*
@@ -845,6 +846,12 @@ static int kgsl_suspend_device(struct kgsl_device *device, pm_message_t state)
 	if (!status)
 		status = device->ftbl->suspend_device(device, state);
 	mutex_unlock(&device->mutex);
+
+	if (status)
+		return status;
+
+	kthread_flush_worker(device->events_worker);
+	flush_workqueue(kgsl_driver.mem_workqueue);
 
 	KGSL_PWR_WARN(device, "suspend end\n");
 	return status;

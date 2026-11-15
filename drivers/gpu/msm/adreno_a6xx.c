@@ -3171,8 +3171,15 @@ static int a6xx_perfcounter_update(struct adreno_device *adreno_dev,
 		reg_pair[i].val = reg->countable;
 	}
 
-	if (i == lock->list_length >> 1)
+	if (i == lock->list_length >> 1) {
+		/* Ensure there is enough space in the reglist buffer for new pairs */
+		if ((i + 1) * sizeof(struct reg_list_pair) + sizeof(*lock) >=
+		    adreno_dev->pwrup_reglist.size) {
+			ret = -ENOSPC;
+			goto unlock;
+		}
 		lock->list_length += 2;
+	}
 
 	if (update_reg)
 		kgsl_regwrite(device, reg->select, reg->countable);
