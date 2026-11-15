@@ -19,6 +19,7 @@
 #include <linux/slimbus/slimbus.h>
 #include <linux/ratelimit.h>
 #include <linux/slab.h>
+#include <linux/errno.h>
 #include <sound/pcm.h>
 #include <sound/pcm_params.h>
 #include <sound/soc.h>
@@ -227,6 +228,11 @@ static int btfm_slim_dai_prepare(struct snd_pcm_substream *substream,
 	/* save the enable channel status */
 	if (ret == 0)
 		bt_soc_enable_status = 1;
+
+	if (ret == -EISCONN) {
+		BTFMSLIM_ERR("channel opened without closing, returning success");
+		ret = 0;
+	}
 	return ret;
 }
 
