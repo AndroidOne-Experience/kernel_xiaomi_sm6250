@@ -104,6 +104,7 @@ enum print_reason {
 
 #define CC_UN_COMPLIANT_VOTER		"CC_UN_COMPLIANT_VOTER"
 
+#define CHARGE_CONTROL_VOTER		"CHARGE_CONTROL_VOTER"
 #define BOOST_BACK_STORM_COUNT	3
 #define WEAK_CHG_STORM_COUNT	8
 
@@ -794,6 +795,10 @@ struct smb_charger {
 	int 		trigger_current_count;
 	int 		index_vfloat;
 	int			remove_comp;
+
+	/* charge control thresholds */
+	int			charge_control_start_threshold;
+	int			charge_control_end_threshold;
 
 	/* fast full charge related */
 	int			chg_term_current_thresh_hi_from_dts;

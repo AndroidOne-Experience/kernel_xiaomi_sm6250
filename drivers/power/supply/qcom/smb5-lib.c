@@ -2277,6 +2277,12 @@ int smblib_get_prop_batt_capacity(struct smb_charger *chg,
 	}
 
 	rc = smblib_get_prop_from_bms(chg, POWER_SUPPLY_PROP_CAPACITY, val);
+	if (!rc && chg->charge_control_end_threshold < 100) {
+		if (val->intval >= chg->charge_control_end_threshold)
+			vote(chg->chg_disable_votable, CHARGE_CONTROL_VOTER, true, 0);
+		else if (val->intval <= chg->charge_control_start_threshold)
+			vote(chg->chg_disable_votable, CHARGE_CONTROL_VOTER, false, 0);
+	}
 
 	return rc;
 }
@@ -9445,6 +9451,9 @@ int smblib_init(struct smb_charger *chg)
 {
 	union power_supply_propval prop_val;
 	int rc = 0;
+
+	chg->charge_control_start_threshold = 0;
+	chg->charge_control_end_threshold = 100;
 
 	mutex_init(&chg->smb_lock);
 	mutex_init(&chg->irq_status_lock);
