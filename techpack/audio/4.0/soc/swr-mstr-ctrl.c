@@ -1865,6 +1865,15 @@ handle_irq:
 			break;
 		case SWRM_INTERRUPT_STATUS_CLK_STOP_FINISHED:
 			break;
+		case SWRM_INTERRUPT_STATUS_DOUT_RATE_MISMATCH:
+			dev_err(swrm->dev,
+				"%s: SWR Port Channel rate mismatch\n",
+				__func__);
+			swrm->intr_mask &=
+				~SWRM_INTERRUPT_STATUS_DOUT_RATE_MISMATCH;
+			swr_master_write(swrm,
+				SWRM_INTERRUPT_MASK_ADDR, swrm->intr_mask);
+			break;
 		default:
 			dev_err_ratelimited(swrm->dev,
 					"SWR unknown interrupt\n");
@@ -2097,6 +2106,15 @@ handle_irq:
 			 * interrupts, if any.
 			 */
 			swrm_enable_slave_irq(swrm);
+			break;
+		case SWRM_INTERRUPT_STATUS_DOUT_RATE_MISMATCH:
+			dev_err(swrm->dev,
+				"%s: SWR Port Channel rate mismatch\n",
+				__func__);
+			swrm->intr_mask &=
+				~SWRM_INTERRUPT_STATUS_DOUT_RATE_MISMATCH;
+			swr_master_write(swrm,
+				SWR_MSTR_RX_SWRM_CPU_INTERRUPT_EN, swrm->intr_mask);
 			break;
 		default:
 			dev_err_ratelimited(swrm->dev,

@@ -2453,7 +2453,9 @@ static void rx_macro_hphdelay_lutbypass(struct snd_soc_codec *codec,
 	}
 
 	if (hph_lut_bypass_reg && SND_SOC_DAPM_EVENT_OFF(event)) {
-		snd_soc_update_bits(codec, BOLERO_CDC_RX_RX0_RX_PATH_CFG1,
+		if (!rx_priv->is_ear_mode_on)
+			snd_soc_update_bits(codec,
+					BOLERO_CDC_RX_RX0_RX_PATH_CFG1,
 					0x02, 0x00);
 		snd_soc_update_bits(codec, hph_lut_bypass_reg, 0x80, 0x00);
 		snd_soc_update_bits(codec, hph_comp_ctrl7, 0x20, 0x20);

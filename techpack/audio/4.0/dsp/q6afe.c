@@ -416,6 +416,7 @@ static int32_t sp_make_afe_callback(uint32_t opcode, uint32_t *payload,
 	u32 *data_dest = NULL;
 	u32 *data_start = NULL;
 	size_t expected_size = sizeof(u32);
+	uint32_t num_ch = 0;
 
 	memset(&param_hdr, 0, sizeof(param_hdr));
 
@@ -456,47 +457,77 @@ static int32_t sp_make_afe_callback(uint32_t opcode, uint32_t *payload,
 
 	switch (param_hdr.param_id) {
 	case AFE_PARAM_ID_CALIB_RES_CFG_V2:
+		num_ch = data_start[0];
 		expected_size += sizeof(struct asm_calib_res_cfg);
-		if (param_hdr.param_size != sizeof(struct asm_calib_res_cfg)) {
+		if (num_ch > SP_V2_NUM_MAX_SPKRS) {
+			pr_err("%s: Error: num_ch %d is greater than expected\n",
+				__func__, num_ch);
+			return -EINVAL;
+		}
+		if (param_hdr.param_size != (sizeof(struct asm_calib_res_cfg) - ((2 - num_ch) * 4))) {
 			pr_err("%s: Error: param_size %d is greater than expected\n",
-				__func__,param_hdr.param_size);
+				__func__, param_hdr.param_size);
 			return -EINVAL;
 		}
 		data_dest = (u32 *) &this_afe.calib_data;
 		break;
 	case AFE_PARAM_ID_SP_V2_TH_VI_FTM_PARAMS:
+		num_ch = data_start[0];
 		expected_size += sizeof(struct afe_sp_th_vi_ftm_params);
-		if (param_hdr.param_size != sizeof(struct afe_sp_th_vi_ftm_params)) {
+		if (num_ch > SP_V2_NUM_MAX_SPKRS) {
+			pr_err("%s: Error: num_ch %d is greater than expected\n",
+				__func__, num_ch);
+			return -EINVAL;
+		}
+		if (param_hdr.param_size != (sizeof(struct afe_sp_th_vi_ftm_params) - ((2 - num_ch) * 4 * 3))) {
 			pr_err("%s: Error: param_size %d is greater than expected\n",
-				__func__,param_hdr.param_size);
+				__func__, param_hdr.param_size);
 			return -EINVAL;
 		}
 		data_dest = (u32 *) &this_afe.th_vi_resp;
 		break;
 	case AFE_PARAM_ID_SP_V2_TH_VI_V_VALI_PARAMS:
+		num_ch = data_start[0];
 		expected_size += sizeof(struct afe_sp_th_vi_v_vali_params);
-		if (param_hdr.param_size != sizeof(struct afe_sp_th_vi_v_vali_params)) {
+		if (num_ch > SP_V2_NUM_MAX_SPKRS) {
+			pr_err("%s: Error: num_ch %d is greater than expected\n",
+				__func__, num_ch);
+			return -EINVAL;
+		}
+		if (param_hdr.param_size != (sizeof(struct afe_sp_th_vi_v_vali_params) - ((2 - num_ch) * 4 * 2))) {
 			pr_err("%s: Error: param_size %d is greater than expected\n",
-				__func__,param_hdr.param_size);
+				__func__, param_hdr.param_size);
 			return -EINVAL;
 		}
 		data_dest = (u32 *) &this_afe.th_vi_v_vali_resp;
 		break;
 	case AFE_PARAM_ID_SP_V2_EX_VI_FTM_PARAMS:
+		num_ch = data_start[0];
 		expected_size += sizeof(struct afe_sp_ex_vi_ftm_params);
-		if (param_hdr.param_size != sizeof(struct afe_sp_ex_vi_ftm_params)) {
+		if (num_ch > SP_V2_NUM_MAX_SPKRS) {
+			pr_err("%s: Error: num_ch %d is greater than expected\n",
+				__func__, num_ch);
+			return -EINVAL;
+		}
+		if (param_hdr.param_size != (sizeof(struct afe_sp_ex_vi_ftm_params) - ((2 - num_ch) * 4 * 4))) {
 			pr_err("%s: Error: param_size %d is greater than expected\n",
-				__func__,param_hdr.param_size);
+				__func__, param_hdr.param_size);
 			return -EINVAL;
 		}
 		data_dest = (u32 *) &this_afe.ex_vi_resp;
 		break;
 	case AFE_PARAM_ID_SP_RX_TMAX_XMAX_LOGGING:
+		num_ch = data_start[0];
 		expected_size += sizeof(
 				struct afe_sp_rx_tmax_xmax_logging_param);
-		if (param_hdr.param_size != sizeof(struct afe_sp_rx_tmax_xmax_logging_param)) {
+		if (num_ch > SP_V2_NUM_MAX_SPKRS) {
+			pr_err("%s: Error: num_ch %d is greater than expected\n",
+				__func__, num_ch);
+			return -EINVAL;
+		}
+		if (param_hdr.param_size != (num_ch * sizeof(struct afe_sp_rx_tmax_xmax_logging_param))) {
 			pr_err("%s: Error: param_size %d is greater than expected\n",
-				__func__,param_hdr.param_size);
+				__func__, param_hdr.param_size);
 			return -EINVAL;
 		}
 		data_dest = (u32 *) &this_afe.xt_logging_resp;
