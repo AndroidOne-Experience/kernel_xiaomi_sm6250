@@ -190,7 +190,6 @@ struct fts_ts_data {
 	int key_state;
 	int touch_point;
 	int point_num;
-	bool rt_prio_set;
 	struct regulator *vdd;
 	struct regulator *vcc_i2c;
 	struct regulator *pwr_vdd;	/* IOVCC 1.8V */

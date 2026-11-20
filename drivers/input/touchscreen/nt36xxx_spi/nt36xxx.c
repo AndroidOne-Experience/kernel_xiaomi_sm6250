@@ -26,7 +26,6 @@
 #include <linux/of_gpio.h>
 #include <linux/of_irq.h>
 #include <linux/pm_runtime.h>
-#include <linux/sched.h>
 #include <linux/power_supply.h>
 
 #if defined(CONFIG_FB)
@@ -1396,11 +1395,6 @@ static irqreturn_t nvt_ts_work_func(int irq, void *data)
 	}
 #endif
 #endif
-
-	if (unlikely(!ts->rt_prio_set)) {
-		sched_set_fifo(current);
-		ts->rt_prio_set = true;
-	}
 
 	mutex_lock(&ts->lock);
 

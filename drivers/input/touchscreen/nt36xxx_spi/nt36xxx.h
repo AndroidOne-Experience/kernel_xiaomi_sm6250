@@ -176,7 +176,6 @@ struct nvt_ts_data {
 	uint8_t *xbuf;
 	struct mutex xbuf_lock;
 	bool irq_enabled;
-	bool rt_prio_set;
 #if WAKEUP_GESTURE
 	bool delay_gesture;
 	bool is_gesture_mode;

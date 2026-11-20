@@ -38,7 +38,6 @@
 #include <linux/of_device.h>
 #include <linux/of_gpio.h>
 #include <linux/of_irq.h>
-#include <linux/sched.h>
 #include <linux/power_supply.h>
 #if defined(CONFIG_FB)
 #include <linux/notifier.h>
@@ -740,11 +739,6 @@ static void fts_irq_read_report(void)
 static irqreturn_t fts_irq_handler(int irq, void *data)
 {
 	int ret = 0;
-
-	if (unlikely(!fts_data->rt_prio_set)) {
-		sched_set_fifo(current);
-		fts_data->rt_prio_set = true;
-	}
 
 	if (fts_data->dev_pm_suspend && fts_data->gesture_mode) {
 		ret = wait_for_completion_timeout(&fts_data->dev_pm_suspend_completion, msecs_to_jiffies(700));
